@@ -15,6 +15,8 @@ class PositionEmbedding(nn.Module):
     def __init__(self, d_model: int, max_len: int = 5000) -> None:
         super(PositionEmbedding, self).__init__()
         #TODO
+        self.pos_embedding = nn.Embedding(max_len, d_model)
     
     def forward(self, x: Tensor) -> Tensor:
         #TODO one line!
+        return  self.pos_embedding(torch.arange(x.size(1), device=x.device))
