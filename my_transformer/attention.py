@@ -31,6 +31,7 @@ class ValueLayer(nn.Module):
 class ScaledDotProductAttention(nn.Module):
     def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, mask: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         #TODO
+
         d_k = q.size(-1)
         scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d_k)
 
@@ -52,18 +53,18 @@ class MultiHeadAttention(nn.Module):
         self.key_layers = KeyLayer(d_model, n_heads)
         self.value_layers = ValueLayer(d_model, n_heads)
         self.attention = ScaledDotProductAttention()
-        self.fc = nn.Linear(n_heads * d_model, d_model)
-    
+        self.fc = nn.Linear(d_model,n_heads * d_model)
+        
     def forward(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
         #TODO
-        batch_size = q.size(0)
-        query = self.query_layers(Q).view(batch_size, -1, self.n_heads,  self.d_model // self.n_heads).transpose(1,2)
+        batch_size = Q.size(0)
+        query = self.query_layers(Q).view(batch_size, -1, self.n_heads,  self.d_model // self.n_heads)
         key = self.key_layers(K).view(batch_size, -1, self.n_heads, self.d_model // self.n_heads)
         value = self.value_layers(V).view(batch_size, -1, self.n_heads, self.d_model // self.n_heads )
 
-        x, _ = ScaledDotProductAttention()(query, key, value, mask=mask)
+        x, _ =self.attention(query, key, value, mask=mask)
         
         x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.n_heads * (self.d_model // self.n_heads))
         output = self.fc(x)
-        
+        print("shape",x.shape)
         return output
